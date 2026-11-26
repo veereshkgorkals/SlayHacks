@@ -22,6 +22,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 ## Completed Steps
 - [x] Step 0: Project scaffold, dependencies, security headers, and PROJECT_STATE.md
 - [x] Step 1: Premium dark-mode UI shell, TypeScript types (`src/types/audit.ts`), sample presets (`src/lib/sample-repos.ts`), and landing workspace
+- [x] Step 1.5: Bespoke Linear/Vercel-inspired monochrome dark UI overhaul
 
 ## Next Step
 Step 2 — Secure GitHub Repo Ingestor & Rate-Limited Backend API Route

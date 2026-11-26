@@ -5,7 +5,7 @@ import "./globals.css";
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -15,17 +15,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AegisLens — AI System Architecture & Security Auditor",
+  title: "AegisLens — System Architecture & Security Auditor",
   description:
-    "AI-powered GitHub repository architecture mapper, red-team security auditor, and auto-patch generator powered by Gemini.",
-  keywords: [
-    "AegisLens",
-    "AI security auditor",
-    "architecture mapper",
-    "red-team",
-    "vulnerability scanner",
-    "auto-patch",
-  ],
+    "Static & semantic codebase audit, deterministic architecture graph, and automated remediation patches for GitHub repositories.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -34,8 +26,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} dark h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#090D16] text-slate-100 font-sans selection:bg-[#14B8A6]/30 selection:text-teal-100">
-        {children}
+      <body className="relative min-h-full flex flex-col bg-[#0A0A0B] text-[#FAFAFA] font-sans selection:bg-[#27272A] selection:text-[#FAFAFA]">
+        <div
+          aria-hidden="true"
+          className="bg-architectural-grid pointer-events-none fixed inset-0 z-0"
+        />
+        <div className="relative z-10 flex min-h-full flex-1 flex-col">
+          {children}
+        </div>
       </body>
     </html>
   );

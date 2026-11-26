@@ -1,41 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090d16;
-  --surface: #0f1623;
-  --foreground: #f1f5f9;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --accent-primary: #14b8a6;
-  --accent-critical: #f43f5e;
+  --background: #0a0a0b;
+  --surface: #111113;
+  --foreground: #fafafa;
+  --muted: #a1a1aa;
+  --border-subtle: #222226;
+  --border-hover: #34343b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-foreground: var(--foreground);
-  --color-accent: var(--accent-primary);
-  --color-critical: var(--accent-critical);
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 body {
-  background-color: #090d16;
-  color: #f1f5f9;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(20, 184, 166, 0.14), transparent 65%),
-    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(244, 63, 94, 0.06), transparent 60%),
-    linear-gradient(to right, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
-  background-attachment: fixed;
+  background-color: #0a0a0b;
+  color: #fafafa;
 }
 
-.surface-card {
-  background-color: #0f1623;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glow-teal {
-  box-shadow: 0 0 28px -6px rgba(20, 184, 166, 0.45);
+.bg-architectural-grid {
+  background-image: radial-gradient(
+    rgba(250, 250, 250, 0.9) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  opacity: 0.04;
+  mask-image: radial-gradient(
+    ellipse 75% 65% at 50% 35%,
+    #000 35%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 75% 65% at 50% 35%,
+    #000 35%,
+    transparent 100%
+  );
 }

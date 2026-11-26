@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Sparkles } from "lucide-react";
+import { useEffect } from "react";
 
 interface NavbarProps {
   hasActiveReport: boolean;
@@ -9,16 +9,27 @@ interface NavbarProps {
 }
 
 export function Navbar({ hasActiveReport, repoLabel, onReset }: NavbarProps) {
+  useEffect(() => {
+    if (!hasActiveReport) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onReset();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [hasActiveReport, onReset]);
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/[0.08] bg-[#090D16]/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand */}
-        <button
-          type="button"
-          onClick={onReset}
-          className="group flex items-center gap-3 text-left focus:outline-none"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/10 shadow-[0_0_20px_-4px_rgba(20,184,166,0.45)] transition-transform group-hover:scale-105">
+    <header className="sticky top-0 z-40 h-14 w-full border-b border-[#222226] bg-[#0A0A0B]/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Left: Brand & Version */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onReset}
+            className="group flex items-center gap-2.5 text-left focus:outline-none"
+          >
             <svg
               width="20"
               height="20"
@@ -26,61 +37,60 @@ export function Navbar({ hasActiveReport, repoLabel, onReset }: NavbarProps) {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true"
+              className="shrink-0 text-[#FAFAFA] transition-opacity group-hover:opacity-80"
             >
               <path
-                d="M12 2.5L4 6V11.5C4 16.75 7.4 21.55 12 22.8C16.6 21.55 20 16.75 20 11.5V6L12 2.5Z"
-                stroke="#14B8A6"
+                d="M8 4H5C4.44772 4 4 4.44772 4 5V8M16 4H19C19.5523 4 20 4.44772 20 5V8M8 20H5C4.44772 20 4 19.5523 4 19V16M16 20H19C19.5523 20 20 19.5523 20 19V16"
+                stroke="currentColor"
                 strokeWidth="1.75"
-                strokeLinejoin="round"
+                strokeLinecap="square"
               />
-              <circle
-                cx="12"
-                cy="12"
-                r="3.25"
-                stroke="#5EEAD4"
+              <rect
+                x="8.5"
+                y="8.5"
+                width="7"
+                height="7"
+                rx="1"
+                stroke="currentColor"
                 strokeWidth="1.75"
               />
-              <circle cx="12" cy="12" r="1.2" fill="#14B8A6" />
+              <circle cx="12" cy="12" r="1.25" fill="currentColor" />
             </svg>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold tracking-tight text-slate-100">
-                AegisLens
-              </span>
-              {repoLabel ? (
-                <span className="hidden rounded border border-white/[0.08] bg-[#0F1623] px-2 py-0.5 font-mono text-xs text-slate-300 sm:inline-block">
-                  {repoLabel}
-                </span>
-              ) : null}
-            </div>
-            <span className="text-[11px] font-medium tracking-wide text-slate-400">
-              AI Architecture &amp; Red-Team Auditor
+            <span className="text-sm font-semibold tracking-tight text-[#FAFAFA]">
+              AegisLens
             </span>
-          </div>
-        </button>
+          </button>
 
-        {/* Right Controls */}
+          <span className="rounded border border-[#222226] px-1.5 py-0.5 font-mono text-xs text-[#71717A]">
+            v1.0
+          </span>
+
+          {repoLabel ? (
+            <span className="hidden items-center gap-2 font-mono text-xs text-[#A1A1AA] sm:inline-flex">
+              <span className="text-[#3F3F46]">/</span>
+              <span>{repoLabel}</span>
+            </span>
+          ) : null}
+        </div>
+
+        {/* Right: New Scan Action */}
         <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-400" />
-            </span>
-            <Sparkles className="h-3.5 w-3.5 text-teal-300" />
-            <span>Gemini 4 Powered</span>
-          </div>
-
           {hasActiveReport ? (
             <button
               type="button"
               onClick={onReset}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.1] bg-[#0F1623] px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-teal-500/40 hover:bg-slate-800/80 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-md border border-[#222226] bg-[#111113] px-2.5 py-1 text-xs font-medium text-[#FAFAFA] transition-colors hover:border-[#34343B] hover:bg-[#18181B]"
             >
-              <RotateCcw className="h-3.5 w-3.5 text-teal-400" />
-              <span>Reset / New Scan</span>
+              <span>New Scan</span>
+              <kbd className="rounded border border-[#27272A] bg-[#0A0A0B] px-1 py-0.5 font-mono text-[10px] text-[#71717A]">
+                ESC
+              </kbd>
             </button>
-          ) : null}
+          ) : (
+            <span className="hidden font-mono text-xs text-[#71717A] sm:inline-block">
+              Static &amp; Semantic Codebase Audit
+            </span>
+          )}
         </div>
       </div>
     </header>
