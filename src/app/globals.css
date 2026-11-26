@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #090d16;
+  --surface: #0f1623;
+  --foreground: #f1f5f9;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --accent-primary: #14b8a6;
+  --accent-critical: #f43f5e;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-accent: var(--accent-primary);
+  --color-critical: var(--accent-critical);
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #090d16;
+  color: #f1f5f9;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(20, 184, 166, 0.14), transparent 65%),
+    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(244, 63, 94, 0.06), transparent 60%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+  background-attachment: fixed;
+}
+
+.surface-card {
+  background-color: #0f1623;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glow-teal {
+  box-shadow: 0 0 28px -6px rgba(20, 184, 166, 0.45);
 }

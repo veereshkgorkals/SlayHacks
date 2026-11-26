@@ -9,8 +9,19 @@ Next.js (App Router, `src/`), TypeScript, Tailwind CSS, `@google/genai`, `@xyflo
 ## Security Controls
 HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API keys.
 
+## Key Files
+- `src/app/layout.tsx` — Root layout, `Plus_Jakarta_Sans` & `JetBrains_Mono`, SEO metadata
+- `src/app/globals.css` — Obsidian-slate dark theme & radial grid background
+- `src/app/page.tsx` — Main landing & workspace state orchestrator
+- `src/types/audit.ts` — Shared TypeScript interfaces for audits, nodes, edges & vulnerabilities
+- `src/lib/sample-repos.ts` — 2 instant judge demo presets (`vulnerable-nextjs-saas`, `ai-rag-chatbot-api`)
+- `src/components/Navbar.tsx` — Glassmorphic top bar with SVG shield-lens logo
+- `src/components/HeroInput.tsx` — GitHub URL validator, animated 3-stage loader & preset cards
+- `src/components/AuditWorkspaceShell.tsx` — Tabbed workspace shell, score gauge & severity counters
+
 ## Completed Steps
 - [x] Step 0: Project scaffold, dependencies, security headers, and PROJECT_STATE.md
+- [x] Step 1: Premium dark-mode UI shell, TypeScript types (`src/types/audit.ts`), sample presets (`src/lib/sample-repos.ts`), and landing workspace
 
 ## Next Step
-Step 1 — Premium Dark-Mode UI Shell, Landing Hero & 1-Click Sample Repo Selector
+Step 2 — Secure GitHub Repo Ingestor & Rate-Limited Backend API Route
