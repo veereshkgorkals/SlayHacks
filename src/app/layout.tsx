@@ -24,12 +24,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} dark h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="relative min-h-full flex flex-col bg-[#0A0A0B] text-[#FAFAFA] font-sans selection:bg-[#27272A] selection:text-[#FAFAFA]">
+      <body className="relative min-h-full flex flex-col bg-[#F6F8FB] text-[#0F172A] font-sans selection:bg-[#EEF2FF] selection:text-[#4338CA]">
         <div
           aria-hidden="true"
-          className="bg-architectural-grid pointer-events-none fixed inset-0 z-0"
+          className="bg-daylight-grid pointer-events-none fixed inset-0 z-0"
         />
         <div className="relative z-10 flex min-h-full flex-1 flex-col">
           {children}
