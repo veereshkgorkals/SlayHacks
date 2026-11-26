@@ -3,12 +3,12 @@
 import { useState } from "react";
 import {
   ExternalLink,
-  FileCode2,
   GitBranch,
   Layers,
-  Network,
   ShieldAlert,
 } from "lucide-react";
+import { ArchitectureGraph } from "@/components/ArchitectureGraph";
+import { VulnerabilityExplorer } from "@/components/VulnerabilityExplorer";
 import type { AuditReport, Severity } from "@/types/audit";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +68,7 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
                 <ExternalLink className="h-3 w-3" />
               </a>
             </div>
-            <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#475569]">
+            <p className="mt-2 text-xs leading-relaxed text-[#475569]">
               {report.summary}
             </p>
           </div>
@@ -88,7 +88,9 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
                 <div
                   className={cn("h-full rounded-full", scoreBarColor)}
-                  style={{ width: `${Math.max(0, Math.min(100, report.securityScore))}%` }}
+                  style={{
+                    width: `${Math.max(0, Math.min(100, report.securityScore))}%`,
+                  }}
                 />
               </div>
             </div>
@@ -247,60 +249,15 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
         ) : null}
 
         {activeTab === "architecture" ? (
-          <div className="surface-elevated flex min-h-[420px] flex-col items-center justify-center rounded-lg p-8 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#C7D2FE] bg-[#EEF2FF]">
-              <Network className="h-5 w-5 text-[#4338CA]" />
-            </div>
-            <h2 className="mt-4 text-sm font-semibold text-[#0F172A]">
-              Deterministic Architecture Graph
-            </h2>
-            <p className="mt-1.5 max-w-md text-xs leading-relaxed text-[#475569]">
-              Step 4 mounts the interactive{" "}
-              <code className="rounded border border-[#E2E8F0] bg-[#F1F5F9] px-1 py-0.5 font-mono text-[#0F172A]">
-                @xyflow/react
-              </code>{" "}
-              topology canvas for {report.nodes.length} components and{" "}
-              {report.edges.length} data-flow edges.
-            </p>
-          </div>
+          <ArchitectureGraph
+            nodes={report.nodes}
+            edges={report.edges}
+            vulnerabilities={report.vulnerabilities}
+          />
         ) : null}
 
         {activeTab === "findings" ? (
-          <div className="surface-elevated divide-y divide-[#E2E8F0] overflow-hidden rounded-lg">
-            {report.vulnerabilities.map((vuln) => (
-              <div key={vuln.id} className="p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-xs text-[#64748B]">
-                      {vuln.id}
-                    </span>
-                    <h3 className="text-sm font-semibold text-[#0F172A]">
-                      {vuln.title}
-                    </h3>
-                  </div>
-                  <span
-                    className={cn(
-                      "rounded border px-2 py-0.5 font-mono text-[11px] font-semibold",
-                      SEVERITY_BADGE_STYLES[vuln.severity]
-                    )}
-                  >
-                    {vuln.severity}
-                  </span>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-3 font-mono text-xs text-[#64748B]">
-                  <span className="inline-flex items-center gap-1.5">
-                    <FileCode2 className="h-3.5 w-3.5" />
-                    {vuln.filePath} ({vuln.lineRange})
-                  </span>
-                  <span>/</span>
-                  <span>{vuln.category}</span>
-                </div>
-                <p className="mt-3 text-xs leading-relaxed text-[#475569]">
-                  {vuln.description}
-                </p>
-              </div>
-            ))}
-          </div>
+          <VulnerabilityExplorer vulnerabilities={report.vulnerabilities} />
         ) : null}
       </div>
     </section>

@@ -22,6 +22,8 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - `src/components/Navbar.tsx` — Minimal daylight top bar with vector shield-lens mark
 - `src/components/HeroInput.tsx` — Elevated command-bar input wired to `/api/audit`
 - `src/components/AuditWorkspaceShell.tsx` — Architectural workspace shell, score bar & severity pills
+- `src/components/ArchitectureGraph.tsx` — Interactive `@xyflow/react` tiered topology & node inspector
+- `src/components/VulnerabilityExplorer.tsx` — Filterable master-detail plain-English vulnerability explorer
 
 ## Completed Steps
 - [x] Step 0: Project scaffold, dependencies, security headers, and PROJECT_STATE.md
@@ -29,6 +31,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - [x] Step 1.5: Crisp white & soft slate-mist editorial UI design system
 - [x] Step 2: Rate limiter (`src/lib/rate-limit.ts`), SSRF-safe GitHub ingestor (`src/lib/github-ingestor.ts`), and `/api/ingest` endpoint
 - [x] Step 3: Gemini AI auditor (`src/lib/gemini-auditor.ts`) with Structured Outputs & `/api/audit` endpoint
+- [x] Step 4: Interactive React Flow architecture graph (`src/components/ArchitectureGraph.tsx`) & plain-English vulnerability explorer (`src/components/VulnerabilityExplorer.tsx`)
 
 ## Next Step
-Step 4 — Interactive Architecture Graph (@xyflow/react) & Vulnerability Dashboard
+Step 5 — Side-by-Side Code Diff Viewer & Exportable Markdown Security Report
