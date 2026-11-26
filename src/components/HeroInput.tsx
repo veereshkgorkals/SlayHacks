@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { AlertCircle, Check, GitBranch, Loader2 } from "lucide-react";
-import type { IngestedRepoPayload } from "@/lib/github-ingestor";
 import { SAMPLE_PRESETS, type SamplePreset } from "@/lib/sample-repos";
 import { cn } from "@/lib/utils";
+import type { AuditReport } from "@/types/audit";
 
 const FULL_GITHUB_REGEX =
   /^https?:\/\/(www\.)?github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+?)(\.git)?\/?$/;
@@ -12,15 +12,15 @@ const OWNER_REPO_REGEX = /^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/;
 
 const SCAN_STAGES = [
   { code: "[01]", label: "Fetching repository tree..." },
-  { code: "[02]", label: "Resolving dependency graph..." },
-  { code: "[03]", label: "Auditing attack surfaces..." },
+  { code: "[02]", label: "Mapping system architecture..." },
+  { code: "[03]", label: "Running red-team security audit..." },
 ];
 
 interface HeroInputProps {
   isScanning: boolean;
   scanStage: number;
   onScanStateChange: (scanning: boolean, stage: number) => void;
-  onIngestSuccess: (payload: IngestedRepoPayload) => void;
+  onAuditComplete: (report: AuditReport) => void;
   onSelectPreset: (preset: SamplePreset) => void;
 }
 
@@ -28,12 +28,24 @@ export function HeroInput({
   isScanning,
   scanStage,
   onScanStateChange,
-  onIngestSuccess,
+  onAuditComplete,
   onSelectPreset,
 }: HeroInputProps) {
   const [repoInput, setRepoInput] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const stageTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const clearStageTimers = () => {
+    for (const timer of stageTimersRef.current) {
+      clearTimeout(timer);
+    }
+    stageTimersRef.current = [];
+  };
+
+  useEffect(() => {
+    return () => clearStageTimers();
+  }, []);
 
   const normalizeRepoUrl = (raw: string): string | null => {
     const trimmed = raw.trim();
@@ -64,12 +76,18 @@ export function HeroInput({
       return;
     }
 
+    clearStageTimers();
     setValidationError(null);
     setApiError(null);
     onScanStateChange(true, 0);
 
+    stageTimersRef.current.push(
+      setTimeout(() => onScanStateChange(true, 1), 1600),
+      setTimeout(() => onScanStateChange(true, 2), 3800)
+    );
+
     try {
-      const response = await fetch("/api/ingest", {
+      const response = await fetch("/api/audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ repoUrl: canonicalUrl }),
@@ -77,22 +95,26 @@ export function HeroInput({
 
       const payload = (await response.json()) as {
         success?: boolean;
-        data?: IngestedRepoPayload;
+        report?: AuditReport;
         error?: string;
       };
 
-      if (!response.ok || !payload.success || !payload.data) {
+      clearStageTimers();
+
+      if (!response.ok || !payload.success || !payload.report) {
         setApiError(
-          payload.error ?? "Unable to ingest repository. Verify it is public and try again."
+          payload.error ??
+            "Unable to complete audit. Verify the repository is public and try again."
         );
         onScanStateChange(false, 0);
         return;
       }
 
       onScanStateChange(false, 0);
-      onIngestSuccess(payload.data);
+      onAuditComplete(payload.report);
     } catch {
-      setApiError("Network error while contacting /api/ingest. Please try again.");
+      clearStageTimers();
+      setApiError("Network error while contacting /api/audit. Please try again.");
       onScanStateChange(false, 0);
     }
   };
