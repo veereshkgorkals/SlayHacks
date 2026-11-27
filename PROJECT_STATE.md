@@ -36,6 +36,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - [x] Step 4: Interactive React Flow architecture graph (`src/components/ArchitectureGraph.tsx`) & plain-English vulnerability explorer (`src/components/VulnerabilityExplorer.tsx`)
 - [x] Step 5: Side-by-side CodeDiffViewer (`src/components/CodeDiffViewer.tsx`) & Markdown report exporter (`src/lib/export-report.ts`)
 - [x] Step 6: Final security hardening (CSP, edge-case validation, ESC shortcut), MIT LICENSE, and Devpost README.md
+- [x] Step 6.5: Input whitespace trimming, smart URL normalization (owner/repo & full URL), and full-width sample preset pills
 
 ## Next Step
 Deployment to Vercel & SLAY HACKS 2026 Devpost Submission

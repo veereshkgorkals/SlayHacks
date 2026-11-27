@@ -7,8 +7,32 @@ import { cn } from "@/lib/utils";
 import type { AuditReport } from "@/types/audit";
 
 const FULL_GITHUB_REGEX =
-  /^https?:\/\/(www\.)?github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+?)(\.git)?\/?$/;
+  /^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/;
+const PROTOCOL_OR_HOST_GITHUB_REGEX =
+  /^(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/i;
 const OWNER_REPO_REGEX = /^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/;
+
+export function normalizeRepoInput(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+
+  const cleaned = trimmed
+    .replace(/\/+$/, "")
+    .replace(/\.git$/i, "")
+    .replace(/\/+$/, "");
+
+  const hostMatch = cleaned.match(PROTOCOL_OR_HOST_GITHUB_REGEX);
+  if (hostMatch) {
+    return `https://github.com/${hostMatch[1]}`;
+  }
+
+  const shortMatch = cleaned.match(OWNER_REPO_REGEX);
+  if (shortMatch) {
+    return `https://github.com/${shortMatch[1]}`;
+  }
+
+  return cleaned;
+}
 
 const SCAN_STAGES = [
   { code: "[01]", label: "Fetching repository tree..." },
@@ -47,30 +71,18 @@ export function HeroInput({
     return () => clearStageTimers();
   }, []);
 
-  const normalizeRepoUrl = (raw: string): string | null => {
-    const trimmed = raw.trim();
-    const fullMatch = trimmed.match(FULL_GITHUB_REGEX);
-    if (fullMatch) {
-      return `https://github.com/${fullMatch[2].replace(/\.git$/i, "")}`;
-    }
-    const shortMatch = trimmed.match(OWNER_REPO_REGEX);
-    if (shortMatch) {
-      return `https://github.com/${shortMatch[1].replace(/\.git$/i, "")}`;
-    }
-    return null;
-  };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const trimmed = repoInput.trim();
+    setRepoInput(trimmed);
     if (!trimmed) {
       setValidationError("Enter owner/repo or select a sample repository below.");
       setApiError(null);
       return;
     }
 
-    const canonicalUrl = normalizeRepoUrl(trimmed);
-    if (!canonicalUrl) {
+    const canonicalUrl = normalizeRepoInput(trimmed);
+    if (!FULL_GITHUB_REGEX.test(canonicalUrl)) {
       setValidationError("Expected owner/repo or https://github.com/owner/repo");
       setApiError(null);
       return;
@@ -166,6 +178,17 @@ export function HeroInput({
                 if (validationError) setValidationError(null);
                 if (apiError) setApiError(null);
               }}
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData("text");
+                if (!pasted) return;
+                e.preventDefault();
+                setRepoInput(normalizeRepoInput(pasted));
+                if (validationError) setValidationError(null);
+                if (apiError) setApiError(null);
+              }}
+              onBlur={() => {
+                setRepoInput((prev) => prev.trim());
+              }}
               disabled={isScanning}
               placeholder="owner/repository"
               aria-label="GitHub repository owner and name"
@@ -258,7 +281,7 @@ export function HeroInput({
       ) : null}
 
       {/* Sample Repository Presets */}
-      <div className="mt-8 w-full">
+      <div className="mx-auto mt-8 w-full max-w-3xl">
         <div className="mb-3 font-mono text-[11px] uppercase tracking-wider text-[#64748B]">
           Sample Repositories
         </div>
@@ -269,15 +292,15 @@ export function HeroInput({
               type="button"
               disabled={isScanning}
               onClick={() => onSelectPreset(preset)}
-              className="group flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 text-left shadow-xs transition-colors hover:border-[#94A3B8] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50"
+              className="group flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3.5 py-3 text-left shadow-xs transition-colors hover:border-[#94A3B8] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <GitBranch className="h-3.5 w-3.5 shrink-0 text-[#64748B] transition-colors group-hover:text-[#0F172A]" />
-                <span className="truncate font-mono text-xs font-medium text-[#0F172A]">
+                <span className="font-mono text-xs font-medium text-[#0F172A]">
                   samples/{preset.label}
                 </span>
               </div>
-              <span className="ml-3 shrink-0 font-mono text-[11px] font-medium text-[#4338CA] opacity-80 transition-opacity group-hover:opacity-100">
+              <span className="shrink-0 font-mono text-[11px] font-medium text-[#4338CA] opacity-80 transition-opacity group-hover:opacity-100">
                 Preview Audit →
               </span>
             </button>
