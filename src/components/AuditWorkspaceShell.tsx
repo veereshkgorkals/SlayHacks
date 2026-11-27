@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  Download,
   ExternalLink,
   GitBranch,
   Layers,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 import { ArchitectureGraph } from "@/components/ArchitectureGraph";
 import { VulnerabilityExplorer } from "@/components/VulnerabilityExplorer";
+import { downloadMarkdownReport } from "@/lib/export-report";
 import type { AuditReport, Severity } from "@/types/audit";
 import { cn } from "@/lib/utils";
 
@@ -51,22 +53,32 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
         <div className="grid grid-cols-1 divide-y divide-[#E2E8F0] lg:grid-cols-4 lg:divide-x lg:divide-y-0">
           {/* Repository Title & Owner */}
           <div className="p-5 lg:col-span-2">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 font-mono text-sm font-semibold text-[#0F172A]">
                 <GitBranch className="h-4 w-4 text-[#64748B]" />
                 <span>
                   {report.owner}/{report.repoName}
                 </span>
               </div>
-              <a
-                href={report.repoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-mono text-xs text-[#64748B] transition-colors hover:text-[#0F172A]"
-              >
-                <span>source</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
+              <div className="flex items-center gap-2.5">
+                <a
+                  href={report.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-mono text-xs text-[#64748B] transition-colors hover:text-[#0F172A]"
+                >
+                  <span>source</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => downloadMarkdownReport(report)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-[#E2E8F0] bg-white px-2.5 py-1 font-mono text-xs font-medium text-[#0F172A] shadow-xs transition-colors hover:bg-[#F8FAFC]"
+                >
+                  <Download className="h-3.5 w-3.5 text-[#64748B]" />
+                  <span>Export Report (.md)</span>
+                </button>
+              </div>
             </div>
             <p className="mt-2 text-xs leading-relaxed text-[#475569]">
               {report.summary}

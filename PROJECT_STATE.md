@@ -24,6 +24,8 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - `src/components/AuditWorkspaceShell.tsx` — Architectural workspace shell, score bar & severity pills
 - `src/components/ArchitectureGraph.tsx` — Interactive `@xyflow/react` tiered topology & node inspector
 - `src/components/VulnerabilityExplorer.tsx` — Filterable master-detail plain-English vulnerability explorer
+- `src/components/CodeDiffViewer.tsx` — Split & Unified GitHub-style diff viewer with Copy Fix
+- `src/lib/export-report.ts` — Client-side Markdown security audit report generator & downloader
 
 ## Completed Steps
 - [x] Step 0: Project scaffold, dependencies, security headers, and PROJECT_STATE.md
@@ -32,6 +34,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - [x] Step 2: Rate limiter (`src/lib/rate-limit.ts`), SSRF-safe GitHub ingestor (`src/lib/github-ingestor.ts`), and `/api/ingest` endpoint
 - [x] Step 3: Gemini AI auditor (`src/lib/gemini-auditor.ts`) with Structured Outputs & `/api/audit` endpoint
 - [x] Step 4: Interactive React Flow architecture graph (`src/components/ArchitectureGraph.tsx`) & plain-English vulnerability explorer (`src/components/VulnerabilityExplorer.tsx`)
+- [x] Step 5: Side-by-side CodeDiffViewer (`src/components/CodeDiffViewer.tsx`) & Markdown report exporter (`src/lib/export-report.ts`)
 
 ## Next Step
-Step 5 — Side-by-Side Code Diff Viewer & Exportable Markdown Security Report
+Step 6 — Final Security Hardening, Edge-Case Polish & Devpost README.md
