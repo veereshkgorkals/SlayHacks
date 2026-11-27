@@ -253,6 +253,110 @@ return Response.json(invoice);`,
 </div>`,
     },
   ],
+  walkthrough: [
+    {
+      sceneNumber: 1,
+      title: "Multi-Tenant SaaS Billing Portal",
+      badge: "WHAT IT DOES",
+      narration:
+        "This repository powers a multi-tenant Next.js SaaS portal where B2B teams manage subscriptions, preview billing receipts, and export invoices. Finance admins self-serve seat upgrades backed by Stripe and PostgreSQL.",
+      visualHeadline: "Self-Serve B2B Billing & Invoice Hub",
+      visualPoints: [
+        "Next.js App Router dashboard for tenant finance admins",
+        "Automated Stripe plan upgrades & Resend receipt emails",
+        "CSV and JSON invoice exports from shared PostgreSQL",
+      ],
+      highlightedFiles: [
+        "src/app/(dashboard)/billing/page.tsx",
+        "src/lib/stripe.ts",
+      ],
+      durationSeconds: 9,
+    },
+    {
+      sceneNumber: 2,
+      title: "Middleware-Gated API & Storage",
+      badge: "ARCHITECTURE",
+      narration:
+        "Execution starts in the Next.js billing UI and passes through JWT session middleware before reaching protected API routes. Those route handlers coordinate shared PostgreSQL tables, Stripe billing events, and Resend mailers.",
+      visualHeadline: "App Router Frontend to Guarded API & Postgres",
+      visualPoints: [
+        "Client dashboard routes requests through src/middleware.ts",
+        "Dedicated API handlers for exports, invoices, and webhooks",
+        "PostgreSQL stores tenants, invoices, and user credentials",
+      ],
+      highlightedFiles: [
+        "src/app/(dashboard)/billing/page.tsx",
+        "src/middleware.ts",
+        "src/lib/db.ts",
+      ],
+      flowFrom: "Next.js Dashboard UI",
+      flowTo: "Session Middleware & PostgreSQL",
+      durationSeconds: 9,
+    },
+    {
+      sceneNumber: 3,
+      title: "Invoice Exports & Webhook Sync",
+      badge: "DATA FLOW",
+      narration:
+        "When a user clicks export, the request clears middleware into the invoice export handler and queries PostgreSQL for billing rows. Separately, Stripe posts checkout events to update tenant plans and trigger email receipts.",
+      visualHeadline: "Dual Paths: Tenant Exports & Stripe Webhooks",
+      visualPoints: [
+        "Export route pulls invoice rows directly from PostgreSQL",
+        "Stripe webhook mutates workspace tier on checkout completion",
+        "Resend dispatches receipt notifications after plan updates",
+      ],
+      highlightedFiles: [
+        "src/app/api/invoices/export/route.ts",
+        "src/app/api/webhooks/stripe/route.ts",
+        "src/lib/mailer.ts",
+      ],
+      flowFrom: "Invoice Export & Webhook Routes",
+      flowTo: "PostgreSQL & Resend Mailer",
+      durationSeconds: 9,
+    },
+    {
+      sceneNumber: 4,
+      title: "Cross-Tenant SQLi & Forged Upgrades",
+      badge: "KEY RISK",
+      narration:
+        "The invoice export endpoint injects raw query parameters straight into SQL, letting any signed-in user dump every organization's billing records. Meanwhile, unverified Stripe webhooks allow attackers to forge free Enterprise upgrades.",
+      visualHeadline: "Critical: Unsanitized SQL & Unverified Webhooks",
+      visualPoints: [
+        "CWE-89 SQL injection via tenantId and sortBy parameters",
+        "Missing stripe-signature verification enables free plan spoofing",
+        "IDOR on /api/invoices/[id] and weak JWT fallback amplify exposure",
+      ],
+      highlightedFiles: [
+        "src/app/api/invoices/export/route.ts",
+        "src/app/api/webhooks/stripe/route.ts",
+        "src/app/api/invoices/[id]/route.ts",
+      ],
+      flowFrom: "Attacker Request Payload",
+      flowTo: "All-Tenant PostgreSQL Data",
+      durationSeconds: 10,
+    },
+    {
+      sceneNumber: 5,
+      title: "Enforce Session Scoping & Signatures",
+      badge: "HARDENING",
+      narration:
+        "Derive tenant identity strictly from verified JWT sessions, parameterize every SQL query, and allowlist sort columns. Add Stripe HMAC signature verification, drop weak JWT fallbacks, and escape invoice memo HTML before shipping.",
+      visualHeadline: "Four Targeted Patches Restore Tenant Isolation",
+      visualPoints: [
+        "Bind $1 SQL parameters to session.tenantId and allowlist sortBy",
+        "Verify stripe-signature with stripe.webhooks.constructEvent()",
+        "Pin HS256 JWT secrets and scope invoice lookups by tenant",
+      ],
+      highlightedFiles: [
+        "src/app/api/invoices/export/route.ts",
+        "src/app/api/webhooks/stripe/route.ts",
+        "src/middleware.ts",
+      ],
+      flowFrom: "Verified Session & Webhook HMAC",
+      flowTo: "Tenant-Isolated Queries",
+      durationSeconds: 9,
+    },
+  ],
 };
 
 const AI_RAG_CHATBOT_API: AuditReport = {
@@ -493,6 +597,111 @@ User Question: \${userQuery}\`;`,
   console.error("[chat-api] Unexpected error:", err);
   return Response.json({ error: "Internal server error" }, { status: 500 });
 }`,
+    },
+  ],
+  walkthrough: [
+    {
+      sceneNumber: 1,
+      title: "Enterprise RAG Knowledge Assistant",
+      badge: "WHAT IT DOES",
+      narration:
+        "This repository implements an enterprise AI chatbot that ingests company web docs and answers employee questions with live citations. Product teams use it to ground Gemini responses in searchable internal knowledge.",
+      visualHeadline: "Grounded Gemini Q&A Over Indexed Web Docs",
+      visualPoints: [
+        "Streaming chat panel with inline source citations",
+        "On-demand URL scraper that embeds pages into pgvector",
+        "Gemini tool-calling agent for SQL lookups and emails",
+      ],
+      highlightedFiles: [
+        "src/components/ChatPanel.tsx",
+        "src/lib/ai/gemini.ts",
+      ],
+      durationSeconds: 9,
+    },
+    {
+      sceneNumber: 2,
+      title: "Chat UI, Ingest API & Agent",
+      badge: "ARCHITECTURE",
+      narration:
+        "Execution begins in the React chat panel, which talks to dedicated chat completion and URL ingestion Next.js API routes. Downstream, those routes coordinate pgvector storage, an LLM tool orchestrator, and Gemini.",
+      visualHeadline: "Next.js API Layer Bridging pgvector & Gemini",
+      visualPoints: [
+        "Frontend ChatPanel connects to /api/chat and /api/ingest/url",
+        "pgvector persists chunked knowledge embeddings in PostgreSQL",
+        "Tool orchestrator mediates context prompts and Gemini actions",
+      ],
+      highlightedFiles: [
+        "src/components/ChatPanel.tsx",
+        "src/app/api/chat/route.ts",
+        "src/lib/ai/agent.ts",
+      ],
+      flowFrom: "Chat Widget Frontend",
+      flowTo: "API Routes & AI Orchestrator",
+      durationSeconds: 9,
+    },
+    {
+      sceneNumber: 3,
+      title: "URL Indexing & Vector Retrieval",
+      badge: "DATA FLOW",
+      narration:
+        "During ingestion, the server scrapes user-submitted URLs and stores text embeddings inside pgvector. When employees ask questions, the chat route runs cosine similarity searches and streams retrieved chunks through the Gemini agent.",
+      visualHeadline: "From Remote URL Scrape to Cited Answer",
+      visualPoints: [
+        "URL ingestor fetches remote HTML and upserts pgvector chunks",
+        "Chat route retrieves top-k matches via cosine similarity",
+        "Orchestrator combines retrieved context with Gemini tool calls",
+      ],
+      highlightedFiles: [
+        "src/app/api/ingest/url/route.ts",
+        "src/lib/vector-store.ts",
+        "src/lib/ai/agent.ts",
+      ],
+      flowFrom: "User Prompt & Ingest URL",
+      flowTo: "pgvector & Gemini Streaming",
+      durationSeconds: 9,
+    },
+    {
+      sceneNumber: 4,
+      title: "Cloud Metadata SSRF & Prompt Hijack",
+      badge: "KEY RISK",
+      narration:
+        "The URL ingestor fetches any unvalidated address, allowing attackers to target cloud metadata endpoints and steal IAM credentials via chatbot summaries. Indirect prompt injection and unscoped vector queries further expose cross-tenant secrets.",
+      visualHeadline: "Critical: Blind SSRF Leaks Cloud IAM Keys",
+      visualPoints: [
+        "Unfiltered fetch() hits 169.254.169.254 metadata endpoints",
+        "Retrieved chunks inject rogue tool instructions into system prompt",
+        "Vector search lacks tenant_id isolation and /api/chat lacks rate limits",
+      ],
+      highlightedFiles: [
+        "src/app/api/ingest/url/route.ts",
+        "src/lib/ai/agent.ts",
+        "src/lib/vector-store.ts",
+      ],
+      flowFrom: "Forged Internal Metadata URL",
+      flowTo: "Exfiltrated IAM Credentials",
+      durationSeconds: 10,
+    },
+    {
+      sceneNumber: 5,
+      title: "Block Internal IPs & Isolate Context",
+      badge: "HARDENING",
+      narration:
+        "Restrict URL ingestion to HTTPS public hosts with disabled redirects, and wrap retrieved chunks inside strict XML untrusted delimiters. Filter every pgvector query by authenticated tenant ID and add per-IP rate limiting.",
+      visualHeadline: "Defense-in-Depth for Ingestion, RAG & API",
+      visualPoints: [
+        "Reject non-HTTPS schemes, private IPs, and metadata hostnames",
+        "Isolate retrieved RAG chunks inside <untrusted_context> tags",
+        "Enforce tenant_id SQL predicates and rate-limit /api/chat",
+      ],
+      highlightedFiles: [
+        "src/app/api/ingest/url/route.ts",
+        "src/lib/ai/agent.ts",
+        "src/lib/vector-store.ts",
+        "src/app/api/chat/route.ts",
+      ],
+      flowFrom: "SSRF Guard & XML Isolation",
+      flowTo: "Tenant-Scoped RAG Pipeline",
+      durationSeconds: 9,
     },
   ],
 };

@@ -45,6 +45,19 @@ export interface AuditStats {
   lowCount: number;
 }
 
+export interface WalkthroughScene {
+  sceneNumber: number;
+  title: string;
+  badge: string;
+  narration: string;
+  visualHeadline: string;
+  visualPoints: string[];
+  highlightedFiles: string[];
+  flowFrom?: string;
+  flowTo?: string;
+  durationSeconds: number;
+}
+
 export interface AuditReport {
   repoName: string;
   repoUrl: string;
@@ -56,4 +69,5 @@ export interface AuditReport {
   nodes: ArchNodeData[];
   edges: ArchEdgeData[];
   vulnerabilities: VulnerabilityItem[];
+  walkthrough?: WalkthroughScene[];
 }
