@@ -22,6 +22,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - `src/components/Navbar.tsx` — Minimal daylight top bar with vector shield-lens mark
 - `src/components/HeroInput.tsx` — Elevated command-bar input wired to `/api/audit`
 - `src/components/AuditWorkspaceShell.tsx` — Architectural workspace shell, score bar & severity pills
+- `src/components/RepoVideoExplainer.tsx` — 16:9 animated & Web Speech narrated repository walkthrough player
 - `src/components/ArchitectureGraph.tsx` — Interactive `@xyflow/react` tiered topology & node inspector
 - `src/components/VulnerabilityExplorer.tsx` — Filterable master-detail plain-English vulnerability explorer
 - `src/components/CodeDiffViewer.tsx` — Split & Unified GitHub-style diff viewer with Copy Fix
@@ -38,6 +39,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - [x] Step 6: Final security hardening (CSP, edge-case validation, ESC shortcut), MIT LICENSE, and Devpost README.md
 - [x] Step 6.5: Input whitespace trimming, smart URL normalization (owner/repo & full URL), and full-width sample preset pills
 - [x] Step 7A (branch feat/video-walkthrough): WalkthroughScene types, Gemini 5-scene storyboard schema, and sample storyboards
+- [x] Step 7B (branch feat/video-walkthrough): 16:9 RepoVideoExplainer player with Framer Motion & Web Speech narration
 
 ## Next Step
-Step 7B — Build 16:9 RepoVideoExplainer Player & Wire into AuditWorkspaceShell
+Merge feat/video-walkthrough into main & Deploy to Vercel

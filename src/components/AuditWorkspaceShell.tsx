@@ -6,15 +6,17 @@ import {
   ExternalLink,
   GitBranch,
   Layers,
+  Play,
   ShieldAlert,
 } from "lucide-react";
 import { ArchitectureGraph } from "@/components/ArchitectureGraph";
+import { RepoVideoExplainer } from "@/components/RepoVideoExplainer";
 import { VulnerabilityExplorer } from "@/components/VulnerabilityExplorer";
 import { downloadMarkdownReport } from "@/lib/export-report";
 import type { AuditReport, Severity } from "@/types/audit";
 import { cn } from "@/lib/utils";
 
-type WorkspaceTab = "overview" | "architecture" | "findings";
+type WorkspaceTab = "overview" | "walkthrough" | "architecture" | "findings";
 
 interface AuditWorkspaceShellProps {
   report: AuditReport;
@@ -37,8 +39,9 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
       ? "bg-[#F59E0B]"
       : "bg-[#EF4444]";
 
-  const tabs: { id: WorkspaceTab; label: string }[] = [
+  const tabs: { id: WorkspaceTab; label: string; icon?: typeof Play }[] = [
     { id: "overview", label: "Overview" },
+    { id: "walkthrough", label: "Video Walkthrough", icon: Play },
     { id: "architecture", label: "Architecture Graph" },
     {
       id: "findings",
@@ -140,22 +143,31 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
       </div>
 
       {/* Underline Tab Bar */}
-      <div className="mt-6 flex items-center gap-6 border-b border-[#E2E8F0]">
+      <div className="mt-6 flex flex-wrap items-center gap-6 border-b border-[#E2E8F0]">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors",
+                "-mb-px inline-flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors",
                 isActive
                   ? "border-[#0F172A] text-[#0F172A]"
                   : "border-transparent text-[#64748B] hover:text-[#0F172A]"
               )}
             >
-              {tab.label}
+              {Icon ? (
+                <Icon
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    isActive ? "fill-[#4338CA] text-[#4338CA]" : "text-[#64748B]"
+                  )}
+                />
+              ) : null}
+              <span>{tab.label}</span>
             </button>
           );
         })}
@@ -164,7 +176,26 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === "overview" ? (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 shadow-xs">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-[#0F172A]">
+                  Interactive 5-Scene Repository Walkthrough
+                </p>
+                <p className="mt-0.5 text-xs text-[#64748B]">
+                  Watch an animated plain-English explainer covering architecture, data flow, and top risks.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab("walkthrough")}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[#C7D2FE] bg-[#EEF2FF] px-3 py-1.5 font-mono text-xs font-semibold text-[#4338CA] transition-colors hover:bg-[#E0E7FF]"
+              >
+                ▶ Watch Repo Walkthrough
+              </button>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
             {/* System Components */}
             <div className="surface-elevated overflow-hidden rounded-lg">
               <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-3">
@@ -257,7 +288,12 @@ export function AuditWorkspaceShell({ report }: AuditWorkspaceShellProps) {
                 ))}
               </div>
             </div>
+            </div>
           </div>
+        ) : null}
+
+        {activeTab === "walkthrough" ? (
+          <RepoVideoExplainer report={report} />
         ) : null}
 
         {activeTab === "architecture" ? (
