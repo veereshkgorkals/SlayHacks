@@ -144,13 +144,30 @@ const IGNORED_EXTENSIONS = [
   ".wasm",
   ".snap",
   ".map",
+  ".md",
+  ".mdx",
+  ".txt",
+  ".rst",
+  ".adoc",
+  ".csv",
 ];
+
+const IGNORED_DOC_BASENAMES = new Set([
+  "license",
+  "license.md",
+  "license.txt",
+  "readme",
+  "changelog",
+  "contributing",
+  "code_of_conduct",
+]);
 
 function shouldIgnorePath(filePath: string): boolean {
   const lower = filePath.toLowerCase();
   if (IGNORED_PATH_SEGMENTS.some((seg) => lower.includes(seg))) return true;
   const baseName = lower.split("/").pop() ?? lower;
   if (IGNORED_FILENAMES.has(baseName)) return true;
+  if (IGNORED_DOC_BASENAMES.has(baseName)) return true;
   if (IGNORED_EXTENSIONS.some((ext) => lower.endsWith(ext))) return true;
   if (lower.includes(".test.") || lower.includes(".spec.")) return true;
   return false;
@@ -256,6 +273,12 @@ function handleGitHubResponseError(res: Response, context: string): never {
     throw new GitHubIngestError(
       `GitHub API access forbidden while ${context}.`,
       403
+    );
+  }
+  if (res.status === 409) {
+    throw new GitHubIngestError(
+      "No analyzable source code files found in this repository.",
+      422
     );
   }
   throw new GitHubIngestError(
@@ -384,6 +407,13 @@ export async function ingestGitHubRepo(
       size: item.size,
     });
     totalChars += trimmedContent.length;
+  }
+
+  if (analyzedFiles.length === 0) {
+    throw new GitHubIngestError(
+      "No analyzable source code files found in this repository.",
+      422
+    );
   }
 
   return {

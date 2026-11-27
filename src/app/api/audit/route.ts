@@ -54,6 +54,16 @@ export async function POST(req: Request) {
     // Stage 1: Fetch repository metadata & high-signal files
     const ingestedData = await ingestGitHubRepo(parsed.data.repoUrl);
 
+    if (ingestedData.analyzedFiles.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "No analyzable source code files found in this repository.",
+        },
+        { status: 422 }
+      );
+    }
+
     // Stage 2 & 3: Architecture mapping & red-team security audit via Gemini
     const report = await runGeminiSecurityAudit(ingestedData);
 

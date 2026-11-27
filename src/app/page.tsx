@@ -58,6 +58,14 @@ export default function Home() {
           />
         )}
       </main>
+
+      {!activeReport ? (
+        <footer className="border-t border-[#E2E8F0] bg-white/60 py-4 text-center">
+          <p className="font-mono text-xs text-[#64748B]">
+            AegisLens • Built for SLAY HACKS 2026 • Zero-Retention Static &amp; Semantic Audit
+          </p>
+        </footer>
+      ) : null}
     </div>
   );
 }

@@ -35,6 +35,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - [x] Step 3: Gemini AI auditor (`src/lib/gemini-auditor.ts`) with Structured Outputs & `/api/audit` endpoint
 - [x] Step 4: Interactive React Flow architecture graph (`src/components/ArchitectureGraph.tsx`) & plain-English vulnerability explorer (`src/components/VulnerabilityExplorer.tsx`)
 - [x] Step 5: Side-by-side CodeDiffViewer (`src/components/CodeDiffViewer.tsx`) & Markdown report exporter (`src/lib/export-report.ts`)
+- [x] Step 6: Final security hardening (CSP, edge-case validation, ESC shortcut), MIT LICENSE, and Devpost README.md
 
 ## Next Step
-Step 6 — Final Security Hardening, Edge-Case Polish & Devpost README.md
+Deployment to Vercel & SLAY HACKS 2026 Devpost Submission

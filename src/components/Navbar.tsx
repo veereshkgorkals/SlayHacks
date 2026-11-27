@@ -12,7 +12,15 @@ export function Navbar({ hasActiveReport, repoLabel, onReset }: NavbarProps) {
   useEffect(() => {
     if (!hasActiveReport) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key !== "Escape") return;
+      const activeEl = document.activeElement;
+      const tagName = activeEl?.tagName?.toLowerCase();
+      const isInputFocused =
+        tagName === "input" ||
+        tagName === "textarea" ||
+        tagName === "select" ||
+        (activeEl instanceof HTMLElement && activeEl.isContentEditable);
+      if (!isInputFocused) {
         onReset();
       }
     };
