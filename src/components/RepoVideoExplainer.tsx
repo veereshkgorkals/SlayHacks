@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRight,
@@ -156,132 +163,393 @@ export function RepoVideoExplainer({ report }: RepoVideoExplainerProps) {
     !isPlaying && safeIndex === scenes.length - 1 && sceneProgress >= 100;
   const canSpeak = speechSupported && !isMuted && !speechUnavailableForRun;
 
+  const pausedRef = useRef<boolean>(false);
+  const charOffsetRef = useRef<number>(0);
+  const progressRef = useRef<number>(0);
+  const boundaryPctRef = useRef<number>(0);
+  const speedAtPauseRef = useRef<PlaybackSpeed | null>(null);
+  const intervalRef = useRef<number | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const speechRunIdRef = useRef<number>(0);
+
+  const isPlayingRef = useRef<boolean>(isPlaying);
+  const canSpeakRef = useRef<boolean>(canSpeak);
+  const speedRef = useRef<PlaybackSpeed>(speed);
+  const scenesLengthRef = useRef<number>(scenes.length);
+
   useEffect(() => {
-    if (!isPlaying || !activeScene) {
-      return;
-    }
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
-    let cancelled = false;
-    const durationMs = Math.max(
-      1000,
-      ((activeScene.durationSeconds || 9) / speed) * 1000
-    );
-    const startTime = Date.now();
-    let speechFinishedOrFallback = !canSpeak;
-
-    const advanceToNextScene = () => {
-      if (cancelled) return;
-      if (safeIndex < scenes.length - 1) {
-        setCurrentIndex(safeIndex + 1);
-        setSceneProgress(0);
-      } else {
-        setSceneProgress(100);
-        setIsPlaying(false);
-      }
-    };
-
-    if (canSpeak && typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(activeScene.narration);
-      utterance.rate = speed;
-      utterance.pitch = 1;
-
-      utterance.onend = () => {
-        if (cancelled) return;
-        advanceToNextScene();
-      };
-
-      utterance.onerror = (event) => {
-        if (cancelled) return;
-        if (
-          event.error === "interrupted" ||
-          event.error === "canceled"
-        ) {
-          return;
-        }
-        speechFinishedOrFallback = true;
-        if (event.error === "not-allowed" || event.error === "synthesis-unavailable") {
-          setSpeechUnavailableForRun(true);
-        }
-      };
-
-      window.speechSynthesis.speak(utterance);
-    }
-
-    const intervalId = window.setInterval(() => {
-      if (cancelled) return;
-      const elapsed = Date.now() - startTime;
-      const rawPct = (elapsed / durationMs) * 100;
-
-      if (speechFinishedOrFallback) {
-        if (rawPct >= 100) {
-          window.clearInterval(intervalId);
-          advanceToNextScene();
-        } else {
-          setSceneProgress(rawPct);
-        }
-      } else {
-        // Cap progress slightly shy of 100% until utterance.onend completes,
-        // with a safety timeout if the browser speech engine stalls silently.
-        if (elapsed >= durationMs * 1.8 + 4000) {
-          window.clearInterval(intervalId);
-          advanceToNextScene();
-        } else {
-          setSceneProgress(Math.min(97, rawPct));
-        }
-      }
-    }, 50);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-      cancelActiveSpeech();
-    };
-  }, [activeScene, canSpeak, isPlaying, safeIndex, scenes.length, speed]);
-
-  // Cancel speech unconditionally on unmount
   useEffect(() => {
-    return () => {
-      cancelActiveSpeech();
-    };
+    canSpeakRef.current = canSpeak;
+  }, [canSpeak]);
+
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  useEffect(() => {
+    scenesLengthRef.current = scenes.length;
+  }, [scenes.length]);
+
+  const clearProgressInterval = useCallback(() => {
+    if (intervalRef.current !== null && typeof window !== "undefined") {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
+  const stopSpeech = useCallback(() => {
+    speechRunIdRef.current += 1;
+    utteranceRef.current = null;
+    cancelActiveSpeech();
+  }, []);
+
+  const advanceToNextScene = useCallback(
+    (fromIndex: number) => {
+      clearProgressInterval();
+      pausedRef.current = false;
+      charOffsetRef.current = 0;
+      boundaryPctRef.current = 0;
+      speedAtPauseRef.current = null;
+
+      if (fromIndex < scenesLengthRef.current - 1) {
+        progressRef.current = 0;
+        setSceneProgress(0);
+        setCurrentIndex(fromIndex + 1);
+      } else {
+        progressRef.current = 100;
+        setSceneProgress(100);
+        isPlayingRef.current = false;
+        setIsPlaying(false);
+      }
+    },
+    [clearProgressInterval]
+  );
+
+  const startProgressInterval = useCallback(
+    (
+      scene: WalkthroughScene,
+      sceneIndex: number,
+      playbackSpeed: PlaybackSpeed,
+      speechSynced: boolean
+    ) => {
+      clearProgressInterval();
+      if (typeof window === "undefined") return;
+
+      const narration = scene.narration;
+      const estimatedSeconds = Math.max(
+        scene.durationSeconds,
+        narration.split(/\s+/).length / 2.2
+      );
+      const effectiveDurationSeconds = Math.max(
+        1,
+        estimatedSeconds / playbackSpeed
+      );
+      let lastTick = Date.now();
+
+      intervalRef.current = window.setInterval(() => {
+        if (!isPlayingRef.current) return;
+
+        const now = Date.now();
+        const dtSeconds = Math.max(0, (now - lastTick) / 1000);
+        lastTick = now;
+        const deltaPct = (dtSeconds / effectiveDurationSeconds) * 100;
+
+        if (speechSynced) {
+          const maxAllowed = Math.min(98, boundaryPctRef.current + 8);
+          const nextPct = Math.min(maxAllowed, progressRef.current + deltaPct);
+          progressRef.current = nextPct;
+          setSceneProgress(nextPct);
+        } else {
+          const nextPct = progressRef.current + deltaPct;
+          if (nextPct >= 100) {
+            advanceToNextScene(sceneIndex);
+          } else {
+            progressRef.current = nextPct;
+            setSceneProgress(nextPct);
+          }
+        }
+      }, 100);
+    },
+    [advanceToNextScene, clearProgressInterval]
+  );
+
+  const startPlaybackSegment = useCallback(
+    (
+      scene: WalkthroughScene,
+      sceneIndex: number,
+      baseOffset: number,
+      initialProgress: number,
+      useSpeech: boolean,
+      playbackSpeed: PlaybackSpeed
+    ) => {
+      clearProgressInterval();
+      stopSpeech();
+
+      progressRef.current = initialProgress;
+      const narration = scene.narration;
+      const safeBaseOffset = Math.max(0, Math.min(narration.length, baseOffset));
+      const remainingText = narration.slice(safeBaseOffset);
+
+      if (
+        useSpeech &&
+        remainingText.trim().length > 0 &&
+        typeof window !== "undefined" &&
+        "speechSynthesis" in window &&
+        typeof SpeechSynthesisUtterance !== "undefined"
+      ) {
+        const runId = ++speechRunIdRef.current;
+        const utterance = new SpeechSynthesisUtterance(remainingText);
+        utterance.rate = playbackSpeed;
+        utterance.pitch = 1;
+        utteranceRef.current = utterance;
+
+        utterance.onboundary = (event) => {
+          if (speechRunIdRef.current !== runId) return;
+          const absoluteChar = Math.min(
+            narration.length,
+            safeBaseOffset + event.charIndex
+          );
+          charOffsetRef.current = absoluteChar;
+
+          const charPct =
+            narration.length > 0
+              ? Math.min(98, (absoluteChar / narration.length) * 100)
+              : 0;
+          boundaryPctRef.current = charPct;
+
+          if (charPct > progressRef.current) {
+            progressRef.current = charPct;
+            setSceneProgress(charPct);
+          }
+        };
+
+        utterance.onend = () => {
+          if (speechRunIdRef.current !== runId) return;
+          utteranceRef.current = null;
+          if (!isPlayingRef.current) return;
+          advanceToNextScene(sceneIndex);
+        };
+
+        utterance.onerror = (event) => {
+          if (speechRunIdRef.current !== runId) return;
+          if (event.error === "interrupted" || event.error === "canceled") {
+            return;
+          }
+          utteranceRef.current = null;
+          if (
+            event.error === "not-allowed" ||
+            event.error === "synthesis-unavailable"
+          ) {
+            setSpeechUnavailableForRun(true);
+          }
+          if (isPlayingRef.current) {
+            startProgressInterval(scene, sceneIndex, playbackSpeed, false);
+          }
+        };
+
+        window.speechSynthesis.speak(utterance);
+        startProgressInterval(scene, sceneIndex, playbackSpeed, true);
+      } else {
+        startProgressInterval(scene, sceneIndex, playbackSpeed, false);
+      }
+    },
+    [advanceToNextScene, clearProgressInterval, startProgressInterval, stopSpeech]
+  );
+
+  // Start scene playback from offset 0 whenever the active scene changes
+  useEffect(() => {
+    if (!activeScene) return;
+
+    pausedRef.current = false;
+    charOffsetRef.current = 0;
+    progressRef.current = 0;
+    boundaryPctRef.current = 0;
+    speedAtPauseRef.current = null;
+
+    if (isPlayingRef.current) {
+      startPlaybackSegment(
+        activeScene,
+        safeIndex,
+        0,
+        0,
+        canSpeakRef.current,
+        speedRef.current
+      );
+    } else {
+      clearProgressInterval();
+      stopSpeech();
+    }
+
+    return () => {
+      clearProgressInterval();
+      stopSpeech();
+    };
+  }, [
+    activeScene,
+    clearProgressInterval,
+    safeIndex,
+    startPlaybackSegment,
+    stopSpeech,
+  ]);
+
+  // Cancel speech and clear offsets unconditionally on unmount
+  useEffect(() => {
+    return () => {
+      pausedRef.current = false;
+      charOffsetRef.current = 0;
+      progressRef.current = 0;
+      boundaryPctRef.current = 0;
+      speedAtPauseRef.current = null;
+      clearProgressInterval();
+      stopSpeech();
+    };
+  }, [clearProgressInterval, stopSpeech]);
+
   const handleTogglePlay = () => {
+    if (!activeScene) return;
+
     if (isPlaying) {
-      cancelActiveSpeech();
+      clearProgressInterval();
+      pausedRef.current = true;
+      speedAtPauseRef.current = speed;
+      isPlayingRef.current = false;
       setIsPlaying(false);
+
+      if (
+        typeof window !== "undefined" &&
+        "speechSynthesis" in window &&
+        window.speechSynthesis.speaking
+      ) {
+        window.speechSynthesis.pause();
+      }
       return;
     }
 
-    if (safeIndex === scenes.length - 1 && sceneProgress >= 100) {
-      setCurrentIndex(0);
+    if (safeIndex === scenes.length - 1 && progressRef.current >= 100) {
+      pausedRef.current = false;
+      charOffsetRef.current = 0;
+      progressRef.current = 0;
+      boundaryPctRef.current = 0;
+      speedAtPauseRef.current = null;
+      setSpeechUnavailableForRun(false);
       setSceneProgress(0);
+      isPlayingRef.current = true;
+      setIsPlaying(true);
+
+      if (safeIndex !== 0) {
+        setCurrentIndex(0);
+      } else {
+        const nextCanSpeak = speechSupported && !isMuted;
+        canSpeakRef.current = nextCanSpeak;
+        startPlaybackSegment(activeScene, 0, 0, 0, nextCanSpeak, speed);
+      }
+      return;
     }
+
+    const wasPaused = pausedRef.current;
+    const speedUnchanged = speedAtPauseRef.current === speed;
+    pausedRef.current = false;
+    speedAtPauseRef.current = null;
     setSpeechUnavailableForRun(false);
+    isPlayingRef.current = true;
     setIsPlaying(true);
+
+    const nextCanSpeak = speechSupported && !isMuted;
+    canSpeakRef.current = nextCanSpeak;
+
+    if (nextCanSpeak) {
+      if (
+        wasPaused &&
+        typeof window !== "undefined" &&
+        "speechSynthesis" in window &&
+        window.speechSynthesis.paused &&
+        utteranceRef.current &&
+        speedUnchanged
+      ) {
+        window.speechSynthesis.resume();
+        startProgressInterval(activeScene, safeIndex, speed, true);
+      } else {
+        startPlaybackSegment(
+          activeScene,
+          safeIndex,
+          charOffsetRef.current,
+          progressRef.current,
+          true,
+          speed
+        );
+      }
+    } else {
+      startProgressInterval(activeScene, safeIndex, speed, false);
+    }
   };
 
   const handleSelectScene = (index: number) => {
     if (index < 0 || index >= scenes.length) return;
-    cancelActiveSpeech();
-    setCurrentIndex(index);
+    clearProgressInterval();
+    stopSpeech();
+    pausedRef.current = false;
+    charOffsetRef.current = 0;
+    progressRef.current = 0;
+    boundaryPctRef.current = 0;
+    speedAtPauseRef.current = null;
     setSceneProgress(0);
+
+    if (index !== safeIndex) {
+      setCurrentIndex(index);
+    } else if (isPlaying && scenes[index]) {
+      startPlaybackSegment(scenes[index], index, 0, 0, canSpeak, speed);
+    }
   };
 
   const handleToggleMute = () => {
     if (!isMuted) {
-      cancelActiveSpeech();
+      stopSpeech();
+      canSpeakRef.current = false;
       setIsMuted(true);
+      if (isPlaying && activeScene) {
+        startProgressInterval(activeScene, safeIndex, speed, false);
+      }
     } else {
       setSpeechUnavailableForRun(false);
       setIsMuted(false);
+      const nextCanSpeak = speechSupported;
+      canSpeakRef.current = nextCanSpeak;
+      if (isPlaying && activeScene && nextCanSpeak) {
+        startPlaybackSegment(
+          activeScene,
+          safeIndex,
+          charOffsetRef.current,
+          progressRef.current,
+          true,
+          speed
+        );
+      }
     }
   };
 
   const handleCycleSpeed = () => {
-    cancelActiveSpeech();
     const nextIdx = (SPEED_OPTIONS.indexOf(speed) + 1) % SPEED_OPTIONS.length;
-    setSpeed(SPEED_OPTIONS[nextIdx]);
+    const nextSpeed = SPEED_OPTIONS[nextIdx];
+    speedRef.current = nextSpeed;
+    setSpeed(nextSpeed);
+
+    if (isPlaying && activeScene) {
+      if (canSpeak) {
+        startPlaybackSegment(
+          activeScene,
+          safeIndex,
+          charOffsetRef.current,
+          progressRef.current,
+          true,
+          nextSpeed
+        );
+      } else {
+        startProgressInterval(activeScene, safeIndex, nextSpeed, false);
+      }
+    }
   };
 
   const voiceStatusLabel = !speechSupported

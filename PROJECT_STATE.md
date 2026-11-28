@@ -40,6 +40,7 @@ HTTP security headers in `next.config.ts`, `.env` gitignored, server-only API ke
 - [x] Step 6.5: Input whitespace trimming, smart URL normalization (owner/repo & full URL), and full-width sample preset pills
 - [x] Step 7A (branch feat/video-walkthrough): WalkthroughScene types, Gemini 5-scene storyboard schema, and sample storyboards
 - [x] Step 7B (branch feat/video-walkthrough): 16:9 RepoVideoExplainer player with Framer Motion & Web Speech narration
+- [x] Step 7C (branch feat/video-walkthrough): Word-synced progress bar (onboundary) and true mid-sentence pause/resume
 
 ## Next Step
 Merge feat/video-walkthrough into main & Deploy to Vercel
